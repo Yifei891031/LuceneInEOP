@@ -1,0 +1,242 @@
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.*;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopScoreDocCollector;
+import org.apache.lucene.store.FSDirectory;
+
+import java.io.*;
+import java.util.ArrayList;
+import Utils.LogReader;
+import CustomPackages.MSITPackage;
+import CustomPackages.Package;
+
+public class LuceneInst {
+	private static StandardAnalyzer analyzer = new StandardAnalyzer();
+
+    private IndexWriter writer;
+    private ArrayList<File> queue = new ArrayList<File>();
+    private int threadCount;
+
+    /**
+     * Constructor
+     * @param indexDir the name of the folder in which the index should be created
+     * @throws java.io.IOException when exception creating index.
+     */
+    LuceneInst(String indexDir) throws IOException {
+        // the boolean true parameter means to create a new index everytime,
+        // potentially overwriting any existing files there.
+        FSDirectory dir = FSDirectory.open(new File(indexDir).toPath());
+
+
+        IndexWriterConfig config = new IndexWriterConfig(analyzer);
+
+        writer = new IndexWriter(dir, config);
+    }
+
+    /**
+     * Indexes a file or directory
+     * @param fileName the name of a text file or a folder we wish to add to the index
+     * @throws java.io.IOException when exception
+     */
+    public void indexFileOrDirectory(String fileName, String packageType) throws IOException {
+        //===================================================
+        //gets the list of files in a folder (if user has submitted
+        //the name of a folder) or gets a single file name (is user
+        //has submitted only the file name)
+        //===================================================
+        addFiles(new File(fileName));
+        threadCouint
+
+        int originalNumDocs = writer.numDocs();
+        for (File f : queue) {
+            LogReader lr = new LogReader(f.getAbsolutePath());
+            
+            Thread t = new Thread(new Runnable(){//Using thread 
+
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					try {
+		                for (int cnt = 0; ; cnt++) {
+		                	if(lr == null){
+		                		System.out.println("hello");
+		                	}
+		                    ArrayList<Package> list = lr.PackagesWrapper(2000);
+		                    if (list == null || list.size() <= 0)
+		                    {
+		                        break;
+		                    }
+
+		                    int size = list.size();
+		                    ArrayList<Document> docs = new ArrayList<Document>();
+		                    for (int i = 0; i < size; i++)
+		                    {
+		                        Package p = list.get(i);
+		                        Document doc = new Document();
+		                        deWrapString(packageType, p, doc);
+		                        
+		                        docs.add(doc);
+		                    }
+
+		                    writer.addDocuments(docs);
+
+		                    if (cnt % 10 == 0) {
+		                        flush();
+		                        System.out.println("bulk count: " + cnt);
+		                    }
+		                }
+		                System.out.println("Added: " + f);
+		            } catch (Exception e) {
+		            	e.printStackTrace();
+		                System.out.println("Could not add: " + f);
+		            } finally {
+
+		            }
+				}
+            	
+            });
+            t.start();   
+            /*
+            try {
+                for (int cnt = 0; ; cnt++) {
+                    ArrayList<Package> list = lr.PackagesWrapper(2000);
+                    if (list == null || list.size() <= 0)
+                    {
+                        break;
+                    }
+
+                    int size = list.size();
+                    ArrayList<Document> docs = new ArrayList<Document>();
+                    for (int i = 0; i < size; i++)
+                    {
+                        Package p = list.get(i);
+                        Document doc = new Document();
+                        this.deWrapString(packageType, p, doc);
+                        
+                        docs.add(doc);
+                    }
+
+                    writer.addDocuments(docs);
+
+                    if (cnt % 10 == 0) {
+                        flush();
+                        System.out.println("bulk count: " + cnt);
+                    }
+                }
+                System.out.println("Added: " + f);
+            } catch (Exception e) {
+                System.out.println("Could not add: " + f);
+            } finally {
+
+            }*/
+        }
+        
+        int newNumDocs = writer.numDocs();
+        System.out.println("");
+        System.out.println("************************");
+        System.out.println((newNumDocs - originalNumDocs) + " documents added.");
+        System.out.println("************************");
+        queue.clear();
+        
+        
+    }
+
+    private void addFiles(File file) {
+
+        if (!file.exists()) {
+            System.out.println(file + " does not exist.");
+        }
+        if (file.isDirectory()) {
+            for (File f : file.listFiles()) {
+                addFiles(f);
+            }
+        } else {
+            String filename = file.getName().toLowerCase();
+            //===================================================
+            // Only index text files
+            //===================================================
+            if (filename.endsWith(".htm") || filename.endsWith(".html") ||
+                    filename.endsWith(".xml") || filename.endsWith(".txt")) {
+                queue.add(file);
+            } else {
+                System.out.println("Skipped " + filename);
+            }
+        }
+    }
+
+    public void flush()  throws IOException {
+        writer.flush();
+    }
+
+    /**
+     * Close the index.
+     * @throws java.io.IOException when exception closing
+     */
+    public void closeIndex() throws IOException {
+        writer.close();
+    }
+    
+    public void deWrapString(String packageType, Package pTmp, Document doc){
+    	switch(packageType){
+    	case "msit":
+    		MSITPackage p = (MSITPackage)pTmp;
+    		doc.add(new StringField("TimeStamp", p.TimeStamp, Field.Store.YES));
+            doc.add(new StringField("TenantId", p.TenantId, Field.Store.YES));
+            doc.add(new StringField("NetworkMessageId", p.NetworkMessageId, Field.Store.YES));
+            doc.add(new StringField("MessageId", p.MessageId, Field.Store.YES));
+            doc.add(new StringField("Source", p.Source, Field.Store.YES));
+            doc.add(new StringField("TransportDirectionality", p.TransportDirectionality, Field.Store.YES));
+            doc.add(new StringField("Directionality", p.Directionality, Field.Store.YES));
+            doc.add(new IntField("RecipientCount", p.RecipientCount, Field.Store.YES));
+            doc.add(new StringField("Recipient", p.Recipient, Field.Store.YES));
+            doc.add(new StringField("RecipientDomain", p.RecipientDomain, Field.Store.YES));
+            doc.add(new StringField("RecipientType", p.RecipientType, Field.Store.YES));
+            doc.add(new StringField("P1Sender", p.P1Sender, Field.Store.YES));
+            doc.add(new StringField("P1Domain", p.P1Domain, Field.Store.YES));
+            doc.add(new StringField("P2Sender", p.P2Sender, Field.Store.YES));
+            doc.add(new StringField("P2Domain", p.P2Domain, Field.Store.YES));
+            doc.add(new StringField("OriginalIP", p.OriginalIP, Field.Store.YES));
+            doc.add(new StringField("Slash24Subnet", p.Slash24Subnet, Field.Store.YES));
+            doc.add(new StringField("FilterControl", p.FilterControl, Field.Store.YES));
+            doc.add(new StringField("FilterSubControl", p.FilterSubControl, Field.Store.YES));
+            doc.add(new StringField("VerdictEDGE", p.VerdictEDGE, Field.Store.YES));
+            doc.add(new StringField("VerdictCF", p.VerdictCF, Field.Store.YES));
+            doc.add(new StringField("VerdictMBX", p.VerdictMBX, Field.Store.YES));
+            doc.add(new StringField("Verdict", p.Verdict, Field.Store.YES));
+            doc.add(new StringField("VerdictSubType", p.VerdictSubType, Field.Store.YES));
+            doc.add(new StringField("MessageType", p.MessageType, Field.Store.YES));
+            doc.add(new StringField("FingerPrintBody", p.FingerPrintBody, Field.Store.YES));
+            doc.add(new StringField("FingerPrintRaw", p.FingerPrintRaw, Field.Store.YES));
+            doc.add(new StringField("BodyBin1", p.BodyBin1, Field.Store.YES));
+            doc.add(new StringField("RawBin1", p.RawBin1, Field.Store.YES));
+            doc.add(new StringField("Category", p.Category, Field.Store.YES));
+            doc.add(new StringField("SubCategory", p.SubCategory, Field.Store.YES));
+            doc.add(new StringField("CustomData", p.CustomData, Field.Store.YES));
+            doc.add(new StringField("FileName", p.FileName, Field.Store.YES));
+            doc.add(new StringField("FileType", p.FileType, Field.Store.YES));
+            doc.add(new IntField("FileVerdict", p.FileVerdict, Field.Store.YES));
+            doc.add(new IntField("FileSize", p.FileSize, Field.Store.YES));
+            doc.add(new StringField("FileHFH", p.FileHFH, Field.Store.YES));
+            doc.add(new StringField("FileFilterSubControl", p.FileFilterSubControl, Field.Store.YES));
+            doc.add(new StringField("EventualVerdict", p.EventualVerdict, Field.Store.YES));
+            doc.add(new StringField("MicrosoftVirusFamily", p.MicrosoftVirusFamily, Field.Store.YES));
+            doc.add(new StringField("CyrenVirusFamily", p.CyrenVirusFamily, Field.Store.YES));
+            doc.add(new StringField("KasperskyVirusFamily", p.KasperskyVirusFamily, Field.Store.YES));
+            doc.add(new StringField("SonarVerdict", p.SonarVerdict, Field.Store.YES));
+            doc.add(new StringField("CHLVerdict", p.CHLVerdict, Field.Store.YES));
+            doc.add(new StringField("MalwareInfo", p.MalwareInfo, Field.Store.YES));
+            doc.add(new IntField("PartitionId", p.PartitionId, Field.Store.YES));
+    		break;
+    	case "feedpackage":
+    		break;
+    	default:
+    		break;
+    	}
+    }
+}

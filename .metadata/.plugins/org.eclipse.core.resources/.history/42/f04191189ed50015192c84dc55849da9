@@ -1,0 +1,62 @@
+import java.io.IOException;
+
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopScoreDocCollector;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.RAMDirectory;
+
+
+public class LuceneInEOP 
+{
+	public static void main(String[] args)
+	{
+        if (args.length != 3) {
+            System.out.println("usage: LuceneInEOP <index_path> <file_to_index><mapping_name>");
+        }
+
+        String indexLocation = args[0];
+        String fileName = args[1];
+        String type = args[2];
+
+        LuceneInst indexer = null;
+        try {
+            indexer = new LuceneInst(indexLocation, fileName);
+        } catch (Exception ex) {
+            System.out.println("Cannot create index..." + ex.getMessage());
+            System.exit(-1);
+        }
+
+        System.out.println("Indexing, index location: '" + indexLocation + "', file name: '" + fileName + "'");
+        //===================================================
+        //read input from user until he enters q for quit
+        //===================================================
+        try {            //try to add file into the index
+            indexer.indexFileOrDirectory(fileName, type);
+        } catch (Exception e) {
+            System.out.println("Error indexing " + fileName + " : " + e.getMessage());
+        }
+
+        //===================================================
+        //after adding, we always have to call the
+        //closeIndex, otherwise the index is not created
+        //===================================================
+        try {
+            indexer.closeIndex();
+        } catch (Exception e)
+        {
+            System.out.println("Error closing index: " + e.getMessage());
+        }
+	}
+}

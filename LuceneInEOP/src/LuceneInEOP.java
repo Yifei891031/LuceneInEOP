@@ -29,10 +29,13 @@ public class LuceneInEOP
         String indexLocation = args[0];
         String fileName = args[1];
         String type = args[2];
+        long startTime = System.currentTimeMillis();
+        int docCount = 0;
 
         LuceneInst indexer = null;
         try {
-            indexer = new LuceneInst(indexLocation);
+            indexer = new LuceneInst(indexLocation, fileName);
+            docCount = indexer.getThreadCount();
         } catch (Exception ex) {
             System.out.println("Cannot create index..." + ex.getMessage());
             System.exit(-1);
@@ -43,6 +46,7 @@ public class LuceneInEOP
         //read input from user until he enters q for quit
         //===================================================
         try {            //try to add file into the index
+        	System.out.println("Start indexing");
             indexer.indexFileOrDirectory(fileName, type);
         } catch (Exception e) {
             System.out.println("Error indexing " + fileName + " : " + e.getMessage());
@@ -53,7 +57,12 @@ public class LuceneInEOP
         //closeIndex, otherwise the index is not created
         //===================================================
         try {
+        	while(indexer.getThreadCount() != 0 || indexer.isStartIndex() == false){
+        	}
             indexer.closeIndex();
+            long stopTime = System.currentTimeMillis();
+            System.out.println("total time it takes to index " + docCount + " documents is : " +
+            			((float)stopTime - startTime)/(1000 * 60));
         } catch (Exception e)
         {
             System.out.println("Error closing index: " + e.getMessage());

@@ -21,21 +21,43 @@ public class LuceneInst {
 
     private IndexWriter writer;
     private ArrayList<File> queue = new ArrayList<File>();
+    private int threadCount = 0;
+    private boolean startIndex = false;
+    private static int currentThreadCount = 0;
+    private long startTime = 0;
+    private long currentTime = 0;
 
-    /**
+    public boolean isStartIndex() {
+		return startIndex;
+	}
+
+	public void setStartIndex(boolean startIndex) {
+		this.startIndex = startIndex;
+	}
+
+	public int getThreadCount() {
+		return threadCount;
+	}
+
+	public void setThreadCount(int threadCount) {
+		this.threadCount = threadCount;
+	}
+
+	/**
      * Constructor
      * @param indexDir the name of the folder in which the index should be created
      * @throws java.io.IOException when exception creating index.
      */
-    LuceneInst(String indexDir) throws IOException {
+    LuceneInst(String indexDir, String fileName) throws IOException {
         // the boolean true parameter means to create a new index everytime,
         // potentially overwriting any existing files there.
         FSDirectory dir = FSDirectory.open(new File(indexDir).toPath());
-
-
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
-
         writer = new IndexWriter(dir, config);
+        addFiles(new File(fileName));
+        this.threadCount = queue.size();
+        this.startIndex = true;
+        System.out.println("Total documents in the file: " + queue.size());
     }
 
     /**
@@ -49,18 +71,24 @@ public class LuceneInst {
         //the name of a folder) or gets a single file name (is user
         //has submitted only the file name)
         //===================================================
-        addFiles(new File(fileName));
-
+        this.setThreadCount(this.queue.size());
         int originalNumDocs = writer.numDocs();
+        startTime = System.currentTimeMillis();
         for (File f : queue) {
-            LogReader lr = new LogReader(fileName);
+            LogReader lr = new LogReader(f.getAbsolutePath());
+            
             Thread t = new Thread(new Runnable(){//Using thread 
 
 				@Override
 				public void run() {
 					// TODO Auto-generated method stub
+					currentThreadCount = currentThreadCount + 1;
+					System.out.println("Number of thread: " + currentThreadCount);
 					try {
 		                for (int cnt = 0; ; cnt++) {
+		                	if(lr == null){
+		                		System.out.println("hello");
+		                	}
 		                    ArrayList<Package> list = lr.PackagesWrapper(2000);
 		                    if (list == null || list.size() <= 0)
 		                    {
@@ -80,24 +108,25 @@ public class LuceneInst {
 
 		                    writer.addDocuments(docs);
 
-		                    if (cnt % 10 == 0) {
+		                    if (cnt != 0 && cnt % 10 == 0) {
 		                        flush();
-		                        System.out.println("bulk count: " + cnt);
+		                        currentTime = System.currentTimeMillis();
+		                        
+		                        System.out.println("Current document: " + writer.numDocs() + 
+		                        		", current indexing rate: " + (writer.numDocs()/ (currentTime - startTime)) * 1000);
 		                    }
 		                }
 		                System.out.println("Added: " + f);
 		            } catch (Exception e) {
+		            	e.printStackTrace();
 		                System.out.println("Could not add: " + f);
 		            } finally {
-
+		            	threadCount--;
 		            }
 				}
             	
             });
-            t.start();
-            
-            
-            
+            t.start();   
             /*
             try {
                 for (int cnt = 0; ; cnt++) {
@@ -130,10 +159,9 @@ public class LuceneInst {
                 System.out.println("Could not add: " + f);
             } finally {
 
-            }
-            */
-            
+            }*/
         }
+        
         /*
         int newNumDocs = writer.numDocs();
         System.out.println("");
@@ -159,7 +187,8 @@ public class LuceneInst {
             // Only index text files
             //===================================================
             if (filename.endsWith(".htm") || filename.endsWith(".html") ||
-                    filename.endsWith(".xml") || filename.endsWith(".txt")) {
+                    filename.endsWith(".xml") || filename.endsWith(".txt") ||
+                    filename.endsWith(".tsv")) {
                 queue.add(file);
             } else {
                 System.out.println("Skipped " + filename);

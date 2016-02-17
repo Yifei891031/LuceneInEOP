@@ -1,0 +1,210 @@
+package CustomPackages;
+
+public class MSITPackage implements Package{
+
+	@Override
+	public void wrap(String[] strs)
+    {
+        if (!strs[0].equals(""))
+        {
+            this.TimeStamp = strs[0];
+        }
+        this.TenantId = strs[1];
+        this.NetworkMessageId = strs[2];
+        this.MessageId = strs[3];
+        this.Source = strs[4];
+        this.TransportDirectionality = strs[5];
+        this.Directionality = strs[6];
+        if (!strs[7].equals(""))
+        {
+            this.RecipientCount = Integer.parseInt(strs[7]);
+        }
+        this.Recipient = strs[8];
+        this.RecipientDomain = strs[9];
+        this.RecipientType = strs[10];
+        this.P1Sender = strs[11];
+        this.P1Domain = strs[12];
+        this.P2Sender = strs[13];
+        this.P2Domain = strs[14];
+        this.OriginalIP = strs[15];
+        this.Slash24Subnet = strs[16];
+        this.FilterControl = strs[17];
+        this.FilterSubControl = strs[18];
+        this.VerdictEDGE = strs[19];
+        this.VerdictCF = strs[20];
+        this.VerdictMBX = strs[21];
+        this.Verdict = strs[22];
+        this.VerdictSubType = strs[23];
+        this.MessageType = strs[24];
+        this.FingerPrintBody = strs[25];
+        this.FingerPrintRaw = strs[26];
+        this.BodyBin1 = strs[27];
+        this.RawBin1 = strs[28];
+        this.Category = strs[29];
+        this.SubCategory = strs[30];
+        this.CustomData = strs[31];
+        this.FileName = strs[32];
+        this.FileType = strs[33];
+
+        if (!strs[34].equals(""))
+        {
+            this.FileVerdict = Integer.parseInt(strs[34]);
+        }
+        if (!strs[35].equals(""))
+        {
+            this.FileSize = Integer.parseInt(strs[35]);
+        }
+
+        this.FileHFH = strs[36];
+        this.FileFilterSubControl = strs[37];
+        this.EventualVerdict = strs[38];
+        this.MicrosoftVirusFamily = strs[39];
+        this.CyrenVirusFamily = strs[40];
+        this.KasperskyVirusFamily = strs[41];
+        this.SonarVerdict = strs[42];
+        this.CHLVerdict = strs[43];
+        this.MalwareInfo = strs[44];
+        if (!strs[45].equals(""))
+        {
+            this.PartitionId = Integer.parseInt(strs[45]);
+        }
+    }
+
+
+    public String TimeStamp;
+
+
+    public String TenantId;
+
+
+    public String NetworkMessageId;
+
+
+    public String MessageId;
+
+
+    public String Source;
+
+
+    public String TransportDirectionality;
+
+
+    public String Directionality;
+
+
+    public int RecipientCount;
+
+
+    public String Recipient;
+
+
+    public String RecipientDomain;
+
+
+    public String RecipientType;
+
+
+    public String P1Sender;
+
+
+    public String P1Domain;
+
+
+    public String P2Sender;
+
+
+    public String P2Domain;
+
+    public String OriginalIP;
+
+
+    public String Slash24Subnet;
+
+
+    public String FilterControl;
+
+
+    public String FilterSubControl;
+
+
+    public String VerdictEDGE;
+
+
+    public String VerdictCF;
+
+
+    public String VerdictMBX;
+
+
+    public String Verdict;
+
+
+    public String VerdictSubType;
+
+
+    public String MessageType;
+
+
+    public String FingerPrintBody;
+
+
+    public String FingerPrintRaw;
+
+
+    public String BodyBin1;
+
+
+    public String RawBin1;
+
+
+    public String Category;
+
+
+    public String SubCategory;
+
+
+    public String CustomData;
+
+
+    public String FileName;
+
+
+    public String FileType;
+
+    
+    public int FileVerdict;
+
+
+    public int FileSize;
+
+
+    public String FileHFH;
+
+
+    public String FileFilterSubControl;
+
+
+    public String EventualVerdict;
+
+
+    public String MicrosoftVirusFamily;
+
+
+    public String CyrenVirusFamily;
+
+
+    public String KasperskyVirusFamily;
+
+
+    public String SonarVerdict;
+
+
+    public String CHLVerdict;
+
+
+    public String MalwareInfo;
+
+
+    public int PartitionId;
+
+}

@@ -1,0 +1,11 @@
+package CustomPackages;
+
+public class MSITPackage implements Package{
+
+	@Override
+	public void wrap(String[] strs) {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

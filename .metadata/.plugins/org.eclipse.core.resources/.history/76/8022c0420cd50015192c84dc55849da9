@@ -1,0 +1,146 @@
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.*;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopScoreDocCollector;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.Version;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import Utils.LogReader;
+import CustomPackages.Package;
+public class LuceneInst {
+	private static StandardAnalyzer analyzer = new StandardAnalyzer();
+
+    private IndexWriter writer;
+    private ArrayList<File> queue = new ArrayList<File>();
+
+    /**
+     * Constructor
+     * @param indexDir the name of the folder in which the index should be created
+     * @throws java.io.IOException when exception creating index.
+     */
+    LuceneInst(String indexDir) throws IOException {
+        // the boolean true parameter means to create a new index everytime,
+        // potentially overwriting any existing files there.
+        FSDirectory dir = FSDirectory.open(new File(indexDir).toPath());
+
+
+        IndexWriterConfig config = new IndexWriterConfig(analyzer);
+
+        writer = new IndexWriter(dir, config);
+    }
+
+    /**
+     * Indexes a file or directory
+     * @param fileName the name of a text file or a folder we wish to add to the index
+     * @throws java.io.IOException when exception
+     */
+    public void indexFileOrDirectory(String fileName) throws IOException {
+        //===================================================
+        //gets the list of files in a folder (if user has submitted
+        //the name of a folder) or gets a single file name (is user
+        //has submitted only the file name)
+        //===================================================
+        addFiles(new File(fileName));
+
+        int originalNumDocs = writer.numDocs();
+        for (File f : queue) {
+            LogReader lr = new LogReader(fileName);
+            try {
+                for (int cnt = 0; ; cnt++) {
+                    ArrayList<Package> list = lr.PackagesWrapper(2000);
+                    if (list == null || list.size() <= 0)
+                    {
+                        break;
+                    }
+
+                    int size = list.size();
+                    ArrayList docs = new ArrayList<Document>();
+                    for (int i = 0; i < size; i++)
+                    {
+                        Package p = list.get(i);
+
+                        Document doc = new Document();
+                        
+                        docs.add(doc);
+                    }
+
+                    writer.addDocuments(docs);
+
+                    if (cnt % 10 == 0) {
+                        flush();
+                        System.out.println("bulk count: " + cnt);
+                    }
+                }
+                System.out.println("Added: " + f);
+            } catch (Exception e) {
+                System.out.println("Could not add: " + f);
+            } finally {
+
+            }
+        }
+
+        int newNumDocs = writer.numDocs();
+        System.out.println("");
+        System.out.println("************************");
+        System.out.println((newNumDocs - originalNumDocs) + " documents added.");
+        System.out.println("************************");
+
+        queue.clear();
+    }
+
+    private void addFiles(File file) {
+
+        if (!file.exists()) {
+            System.out.println(file + " does not exist.");
+        }
+        if (file.isDirectory()) {
+            for (File f : file.listFiles()) {
+                addFiles(f);
+            }
+        } else {
+            String filename = file.getName().toLowerCase();
+            //===================================================
+            // Only index text files
+            //===================================================
+            if (filename.endsWith(".htm") || filename.endsWith(".html") ||
+                    filename.endsWith(".xml") || filename.endsWith(".txt")) {
+                queue.add(file);
+            } else {
+                System.out.println("Skipped " + filename);
+            }
+        }
+    }
+
+    public void flush()  throws IOException {
+        writer.flush();
+    }
+
+    /**
+     * Close the index.
+     * @throws java.io.IOException when exception closing
+     */
+    public void closeIndex() throws IOException {
+        writer.close();
+    }
+    
+    public void deWrapString(String packageType, Package p, Document doc){
+    	switch(packageType){
+    	case "msit":
+    		
+    		break;
+    	case "feedpackage":
+    		break;
+    	default:
+    		break;
+    	}
+    }
+}

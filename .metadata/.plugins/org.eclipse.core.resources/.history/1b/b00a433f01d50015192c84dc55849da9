@@ -1,0 +1,29 @@
+package Utils;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+
+public class LogReader {
+	private String filePath;
+	private  BufferedReader bufferedReader;
+	private	FileInputStream fileInputStream;
+	
+	public LogReader(String filePath){
+		this.filePath = filePath;
+		fileInputStream = new FileInputStream(new File(filePath));
+		bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream))
+		
+	}
+
+	public String getFilePath() {
+		return filePath;
+	}
+
+	public void setFilePath(String filePath) {
+		this.filePath = filePath;
+	}
+	
+	
+	
+}

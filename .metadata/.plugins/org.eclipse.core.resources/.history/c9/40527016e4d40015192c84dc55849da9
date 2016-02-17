@@ -1,0 +1,10 @@
+import java.io.IOException;
+
+import org.apache.lucene.*;
+
+
+public class LuceneInEOP {
+	public static void searchIndex(String[] queryStrings) throws IOException, ParseException{
+		Searcher searcher = new IndexSearcher(SFDirect)
+	}
+}

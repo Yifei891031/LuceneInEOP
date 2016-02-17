@@ -1,0 +1,11 @@
+package Utils;
+
+public class LogReader {
+	public String filePath;
+	
+	
+	public LogReader(String filePath){
+		this.filePath = filePath;
+	}
+	
+}

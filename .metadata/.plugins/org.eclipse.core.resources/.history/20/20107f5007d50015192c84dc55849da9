@@ -1,0 +1,22 @@
+package Utils;
+
+public class LogPackage {
+	 public LogPackage()
+	    {
+	        LogPackages = new ArrayList<FeedPackage>();
+	    }
+
+	    public ArrayList<FeedPackage> LogPackages;
+
+	    public void insertValue(String line)
+	    {
+	        String[] strs = line.split("\t");
+	        if(strs.length == 46)
+	        {
+	            FeedPackage fp = new FeedPackage();
+	            fp.wrap(strs);
+	            LogPackages.add(fp);
+	        }
+	    }
+	}
+}
